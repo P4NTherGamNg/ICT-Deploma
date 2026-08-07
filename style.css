@@ -1409,3 +1409,270 @@ i{
     background:transparent;
     box-shadow:none;
 }
+/* ================================================================
+   RESPONSIVE — MOBILE (down to 320px)
+   ================================================================ */
+
+@media (max-width: 900px){
+
+    .support-chat-wrap{
+        flex-direction:column;
+        height:auto;
+    }
+
+    .support-threads{
+        width:100%;
+        max-height:220px;
+    }
+
+    .support-conversation{
+        height:420px;
+    }
+}
+
+@media (max-width: 768px){
+
+    /* ---- Navbar ---- */
+    .nav-container{
+        flex-wrap:wrap;
+        justify-content:center;
+        padding:10px 0;
+    }
+
+    .nav-logo{
+        padding:8px 16px;
+        font-size:20px;
+        width:100%;
+        text-align:center;
+    }
+
+    .search-box{
+        width:90%;
+        order:3;
+        margin:6px auto 10px;
+        height:38px;
+    }
+
+    .nav-loging-btn{
+        padding:0 12px 8px;
+        width:100%;
+        justify-content:center;
+        flex-wrap:wrap;
+        gap:8px;
+    }
+
+    .btn{
+        padding:8px 12px;
+        font-size:13px;
+        letter-spacing:1px;
+    }
+
+    .navbar{
+        position:fixed;
+    }
+
+    /* ---- Home ---- */
+    .home-title{
+        font-size:2.4rem;
+        letter-spacing:2px;
+        padding:0 16px;
+    }
+
+    /* ---- Products / Notes grid ---- */
+    .products{
+        padding:30px 16px 50px;
+    }
+
+    .section-title{
+        font-size:24px;
+        letter-spacing:1px;
+        margin-bottom:26px;
+    }
+
+    .products-grid{
+        grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
+        gap:14px;
+    }
+
+    .product-img{
+        height:130px;
+    }
+
+    /* ---- Auth / Cart / Details modals ---- */
+    .auth-box{
+        width:92vw;
+        padding:28px 20px 22px;
+    }
+
+    #noteDetailsModal{
+        padding-top:80px;
+    }
+
+    .note-details-box{
+        width:94vw;
+        height:82vh;
+    }
+
+    .note-details-banner{
+        height:150px;
+    }
+
+    .note-details-banner-overlay h2{
+        font-size:20px;
+    }
+
+    .note-details-body{
+        padding:18px 18px 22px;
+    }
+
+    /* ---- Admin dashboard ---- */
+    .admin-navbar{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:10px;
+        padding:14px 16px;
+    }
+
+    .admin-nav-right{
+        flex-wrap:wrap;
+        gap:10px;
+        width:100%;
+    }
+
+    .admin-main{
+        padding:26px 16px;
+    }
+
+    .stat-cards{
+        flex-direction:column;
+    }
+
+    .product-form-row{
+        flex-direction:column;
+        gap:0;
+    }
+
+    .file-row{
+        flex-wrap:wrap;
+    }
+
+    .file-title-input,
+    .file-url-input{
+        flex:1 1 100%;
+    }
+
+    /* ---- Chat widget ---- */
+    .chat-widget{
+        width:92vw;
+        right:4vw;
+        bottom:84px;
+        height:65vh;
+    }
+
+    .chat-fab{
+        bottom:18px;
+        right:18px;
+        width:52px;
+        height:52px;
+        font-size:19px;
+    }
+}
+
+@media (max-width: 480px){
+
+    .home-title{
+        font-size:1.9rem;
+        letter-spacing:1px;
+    }
+
+    .nav-logo{
+        font-size:18px;
+    }
+
+    .search-box{
+        width:94%;
+    }
+
+    .search-box input{
+        font-size:14px;
+    }
+
+    .products-grid{
+        grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));
+        gap:10px;
+    }
+
+    .product-info{
+        padding:12px 12px 16px;
+    }
+
+    .product-info h3{
+        font-size:15px;
+    }
+
+    .add-to-cart-btn{
+        font-size:12px;
+        padding:8px 10px;
+    }
+
+    .note-details-box{
+        width:96vw;
+        height:85vh;
+    }
+
+    .note-details-banner{
+        height:120px;
+    }
+
+    .note-details-banner-overlay{
+        padding:34px 16px 14px;
+    }
+
+    .cart-box,
+    .auth-box{
+        padding:24px 16px 18px;
+    }
+
+    .users-table th,
+    .users-table td{
+        padding:10px 10px;
+        font-size:13px;
+    }
+
+    .stat-card{
+        padding:16px 20px;
+        min-width:0;
+        width:100%;
+    }
+}
+
+@media (max-width: 360px){
+
+    .home-title{
+        font-size:1.5rem;
+    }
+
+    .nav-logo{
+        font-size:15px;
+        letter-spacing:1px;
+    }
+
+    .btn{
+        padding:7px 10px;
+        font-size:11px;
+    }
+
+    .products-grid{
+        grid-template-columns:repeat(auto-fill, minmax(115px, 1fr));
+        gap:8px;
+    }
+
+    .section-title{
+        font-size:20px;
+    }
+
+    .chat-widget{
+        width:94vw;
+        right:3vw;
+    }
+}
