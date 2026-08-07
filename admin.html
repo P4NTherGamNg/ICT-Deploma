@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Admin Dashboard | ICT Deploma</title>
+	<link rel="icon" type="image/png" href="favicon.png">
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+	<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+	<!-- Shown while checking auth / role -->
+	<div class="guard-overlay" id="guardOverlay">
+		<p>Checking access...</p>
+	</div>
+
+	<div class="dashboard hidden" id="dashboard">
+		<nav class="admin-navbar">
+			<div class="nav-logo">░Admin Panel░</div>
+			<div class="admin-nav-right">
+				<span id="adminName"></span>
+				<span class="role-badge" id="adminRoleBadge"></span>
+				<a href="index.html" class="btn admin-store-link"><i class="fa-solid fa-store"></i> View Store</a>
+				<button id="adminLogoutBtn" class="btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+			</div>
+		</nav>
+
+		<main class="admin-main">
+			<h1>Dashboard</h1>
+
+			<div class="stat-cards">
+				<div class="stat-card">
+					<span class="stat-value" id="totalUsers">-</span>
+					<span class="stat-label">Total Users</span>
+				</div>
+			</div>
+
+			<h2>Registered Users</h2>
+			<div class="table-wrap">
+				<table class="users-table">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Email</th>
+							<th>Role</th>
+							<th>Support Access</th>
+							<th>Joined</th>
+							<th>Action</th>
+						</tr>
+					</thead>
+					<tbody id="usersTableBody">
+						<tr><td colspan="6">Loading...</td></tr>
+					</tbody>
+				</table>
+			</div>
+
+			<h2 id="noteFormHeading">Add a Note</h2>
+			<form id="noteForm" class="product-form">
+				<input type="text" id="noteTitle" placeholder="Note Title" required>
+				<input type="text" id="noteSubject" placeholder="Subject / Module (e.g. Database Systems)">
+				<textarea id="noteDesc" placeholder="Short description of what this note covers..." rows="3"></textarea>
+				<input type="url" id="noteImage" placeholder="Thumbnail Image URL (optional)">
+
+				<label class="file-rows-label">Files</label>
+				<div id="fileRows" class="file-rows">
+					<div class="file-row">
+						<input type="text" class="file-title-input" placeholder="File title (e.g. Chapter 1 Notes)">
+						<input type="url" class="file-url-input" placeholder="File URL (PDF / Drive link)">
+						<button type="button" class="remove-file-row-btn"><i class="fa-solid fa-xmark"></i></button>
+					</div>
+				</div>
+				<button type="button" id="addFileRowBtn" class="btn add-file-row-btn"><i class="fa-solid fa-plus"></i> Add Another File</button>
+
+				<label class="file-rows-label">Text / Code Blocks (optional)</label>
+				<div id="codeRows" class="file-rows">
+					<div class="code-row">
+						<input type="text" class="code-title-input" placeholder="Block title (e.g. Sample Java Code)">
+						<textarea class="code-content-input" placeholder="Paste text or code here..." rows="4"></textarea>
+						<button type="button" class="remove-code-row-btn"><i class="fa-solid fa-xmark"></i></button>
+					</div>
+				</div>
+				<button type="button" id="addCodeRowBtn" class="btn add-file-row-btn"><i class="fa-solid fa-plus"></i> Add Another Block</button>
+
+				<p class="auth-error" id="noteError"></p>
+				<div class="note-form-actions">
+					<button type="submit" class="btn auth-submit" id="noteSubmitBtn">Add Note</button>
+					<button type="button" class="btn cancel-edit-btn hidden" id="cancelEditBtn">Cancel Edit</button>
+				</div>
+			</form>
+
+			<h2>Manage Notes</h2>
+			<div class="table-wrap">
+				<table class="users-table">
+					<thead>
+						<tr>
+							<th>Image</th>
+							<th>Title</th>
+							<th>Subject</th>
+							<th>Action</th>
+						</tr>
+					</thead>
+					<tbody id="notesTableBody">
+						<tr><td colspan="4">Loading...</td></tr>
+					</tbody>
+				</table>
+			</div>
+		</main>
+
+		<section class="admin-main">
+			<div class="support-heading-row">
+				<h2>Support Messages</h2>
+				<button type="button" id="clearPublicChatBtn" class="btn danger-btn hidden"><i class="fa-solid fa-trash"></i> Clear Public Chat</button>
+			</div>
+			<p class="chat-empty support-no-access hidden" id="supportNoAccess">You don't have permission to access Support Messages. Ask an admin to grant you access.</p>
+			<div class="support-chat-wrap hidden" id="supportChatWrap">
+				<div class="support-threads" id="supportThreads">
+					<p class="chat-empty">Loading conversations...</p>
+				</div>
+				<div class="support-conversation">
+					<div class="support-conversation-header hidden" id="supportConvHeader">
+						<span id="supportConvName"></span>
+						<button type="button" id="clearThreadBtn" class="btn danger-btn hidden"><i class="fa-solid fa-trash"></i> Remove Conversation</button>
+					</div>
+					<div class="chat-messages" id="supportMessages">
+						<p class="chat-empty">Select a conversation to view it.</p>
+					</div>
+					<form class="chat-input-row hidden" id="supportReplyForm">
+						<input type="text" id="supportReplyInput" placeholder="Type a reply..." autocomplete="off" required>
+						<button type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+					</form>
+				</div>
+			</div>
+		</section>
+	</div>
+
+	<script type="module" src="admin-auth.js"></script>
+	<script type="module" src="admin-chat.js"></script>
+</body>
+</html>

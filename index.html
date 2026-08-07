@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>ICT | Deploma</title>
+	<link rel="icon" type="image/png" href="favicon.png">
+	
+	<!-- Google Fonts + Font Awesome -->
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+	<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+	
+	<link rel="stylesheet" href="style.css">
+	<script src="script.js" defer></script>
+</head>
+<body>
+	<!--Navigation bar open-->
+	
+	<nav class="navbar">
+	 <div class="nav-container">
+		<div class="nav-logo">░ICT.Deploma░</div>
+		
+		<div class="search-box">
+			<input type="text" id="searchInput" placeholder="Search notes...">
+			<button>
+            <i class="fa-solid fa-magnifying-glass"></i>
+			</button>
+		</div>
+		
+		<div class="nav-loging-btn">
+			<a href="admin.html" id="adminPanelBtn" class="btn admin-panel-btn hidden"><i class="fa-solid fa-gauge"></i> Admin Panel</a>
+			<a href="#" id="openAuthBtn" class="btn"><i class="fa-solid fa-user"></i> Loging</a>
+		</div>
+	 </div>
+	</nav>
+	
+	<!--Navigation bar closs-->
+	
+	<section id="home" class="home">
+	
+		<div class="home-content">
+			<h1 class="home-title">ICT | DEPLOMA</h1>
+            
+		</div>
+	</section>
+
+	<!--Notes section open-->
+	<section id="notes" class="products">
+		<h2 class="section-title">Study Notes</h2>
+		<div class="products-grid" id="notesGrid">
+			<p class="products-empty" id="notesEmpty">Loading notes...</p>
+		</div>
+	</section>
+	<!--Notes section closs-->
+
+	<!--Note details modal open-->
+	<div class="auth-modal" id="noteDetailsModal">
+		<div class="note-details-box">
+			<button class="auth-close" id="closeNoteDetailsBtn">&times;</button>
+
+			<div class="note-details-banner" id="detailsBanner">
+				<div class="note-details-banner-overlay">
+					<h2 id="detailsTitle"></h2>
+					<span class="note-subject-badge" id="detailsSubject"></span>
+				</div>
+			</div>
+
+			<div class="note-details-body">
+				<p class="note-details-date" id="detailsDate"></p>
+				<div class="note-details-desc" id="detailsDesc"></div>
+
+				<div class="auth-tabs note-details-tabs">
+					<button type="button" id="filesTabBtn" class="auth-tab active-tab">Files</button>
+					<button type="button" id="codeTabBtn" class="auth-tab">Code / Text</button>
+				</div>
+
+				<div class="note-tab-panel" id="filesTabPanel">
+					<div class="note-details-links" id="detailsLinks"></div>
+				</div>
+
+				<div class="note-tab-panel hidden" id="codeTabPanel">
+					<div class="note-details-links" id="codeBlocksList"></div>
+
+					<div class="code-block-viewer hidden" id="codeBlockViewer">
+						<button type="button" class="code-back-btn" id="codeBackBtn"><i class="fa-solid fa-arrow-left"></i> Back to list</button>
+						<h4 id="codeBlockTitle"></h4>
+						<pre class="note-details-code" id="detailsCode"></pre>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--Note details modal closs-->
+
+	<!--Auth modal open-->
+	<div class="auth-modal" id="authModal">
+		<div class="auth-box">
+			<button class="auth-close" id="closeAuthBtn">&times;</button>
+
+			<div class="auth-tabs">
+				<button type="button" id="tabLogin" class="auth-tab active-tab">Sign In</button>
+				<button type="button" id="tabSignup" class="auth-tab">Sign Up</button>
+			</div>
+
+			<form id="loginForm" class="auth-form">
+				<h2>Welcome Back</h2>
+				<input type="email" id="loginEmail" placeholder="Email" required>
+				<input type="password" id="loginPassword" placeholder="Password" required>
+				<p class="auth-error" id="loginError"></p>
+				<button type="submit" class="btn auth-submit">Sign In</button>
+
+				<div class="auth-divider"><span>or</span></div>
+				<button type="button" class="google-btn" id="googleLoginBtn">
+					<i class="fa-brands fa-google"></i> Continue with Google
+				</button>
+			</form>
+
+			<form id="signupForm" class="auth-form hidden">
+				<h2>Create Account</h2>
+				<input type="text" id="signupName" placeholder="Full Name" required>
+				<input type="email" id="signupEmail" placeholder="Email" required>
+				<input type="password" id="signupPassword" placeholder="Password (min 6 chars)" required>
+				<p class="auth-error" id="signupError"></p>
+				<button type="submit" class="btn auth-submit">Create Account</button>
+
+				<div class="auth-divider"><span>or</span></div>
+				<button type="button" class="google-btn" id="googleSignupBtn">
+					<i class="fa-brands fa-google"></i> Continue with Google
+				</button>
+			</form>
+		</div>
+	</div>
+	<!--Auth modal closs-->
+
+	<!--Name prompt modal (first-time Google sign-in) open-->
+	<div class="auth-modal" id="nameModal">
+		<div class="auth-box">
+			<h2>What's your name?</h2>
+			<p class="name-modal-hint">We'll show this on your account.</p>
+			<input type="text" id="nameModalInput" placeholder="Full Name" required>
+			<p class="auth-error" id="nameModalError"></p>
+			<button type="button" class="btn auth-submit" id="nameModalSubmit">Continue</button>
+		</div>
+	</div>
+	<!--Name prompt modal closs-->
+
+	<!--Chat widget open-->
+	<script type="module" src="auth.js"></script>
+	<script type="module" src="notes.js"></script>
+	<script type="module" src="chat.js"></script>
+
+	<!--Floating chat button + widget open-->
+	<button id="chatFab" class="chat-fab hidden"><i class="fa-solid fa-comments"></i></button>
+
+	<div class="chat-widget hidden" id="chatWidget">
+		<div class="chat-widget-header">
+			<div class="chat-widget-tabs">
+				<button type="button" id="publicChatTabBtn" class="chat-widget-tab active-tab">Public Chat</button>
+				<button type="button" id="adminChatTabBtn" class="chat-widget-tab">Admin Support</button>
+			</div>
+			<button type="button" class="chat-widget-close" id="chatWidgetClose">&times;</button>
+		</div>
+
+		<div class="chat-widget-body" id="publicChatPanel">
+			<div class="chat-messages" id="publicChatMessages"></div>
+			<form class="chat-input-row" id="publicChatForm">
+				<input type="text" id="publicChatInput" placeholder="Message everyone..." autocomplete="off" required>
+				<button type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+			</form>
+			<p class="chat-widget-hint">Visible to everyone who's logged in.</p>
+		</div>
+
+		<div class="chat-widget-body hidden" id="adminChatPanel">
+			<div class="chat-messages" id="adminChatMessages"></div>
+			<form class="chat-input-row" id="adminChatForm">
+				<input type="text" id="adminChatInput" placeholder="Message the admin team..." autocomplete="off" required>
+				<button type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+			</form>
+		</div>
+	</div>
+	<!--Floating chat button + widget closs-->
+</body>
+</html>
