@@ -229,10 +229,10 @@ onAuthStateChanged(auth, async (user) => {
     const role = snap.exists() ? snap.data().role : null;
     const displayName = snap.exists() && snap.data().name ? snap.data().name : (user.displayName || user.email);
 
-    openAuthBtn.innerHTML = `<i class="fa-solid fa-user"></i> ${displayName} <i class="fa-solid fa-right-from-bracket logout-icon" title="Logout"></i>`;
+    openAuthBtn.innerHTML = `<i class="fa-solid fa-user"></i> <span class="btn-label">${displayName}</span> <i class="fa-solid fa-right-from-bracket logout-icon" title="Logout"></i>`;
     adminPanelBtn.classList.toggle("hidden", role !== "admin" && role !== "moderator");
   } else {
-    openAuthBtn.innerHTML = `<i class="fa-solid fa-user"></i> Loging`;
+    openAuthBtn.innerHTML = `<i class="fa-solid fa-user"></i> <span class="btn-label">Loging</span>`;
     adminPanelBtn.classList.add("hidden");
   }
 });

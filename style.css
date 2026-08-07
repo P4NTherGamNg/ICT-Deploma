@@ -1676,3 +1676,69 @@ i{
         right:3vw;
     }
 }
+
+/* ================================================================
+   MOBILE NAV — single line: [admin icon] title [login icon]
+   Search box moves to its own row below. Text labels hidden.
+   ================================================================ */
+
+@media (max-width: 768px){
+
+    .nav-container{
+        position:relative;
+        flex-wrap:wrap;
+        justify-content:center;
+        padding:14px 54px;
+    }
+
+    .nav-logo{
+        width:auto;
+        padding:0;
+        font-size:17px;
+        text-align:center;
+        order:0;
+    }
+
+    .nav-loging-btn{
+        display:contents;
+    }
+
+    .btn-label{
+        display:none;
+    }
+
+    #adminPanelBtn{
+        position:absolute;
+        left:8px;
+        top:50%;
+        transform:translateY(-50%);
+        padding:9px 11px;
+        width:auto;
+    }
+
+    #openAuthBtn{
+        position:absolute;
+        right:8px;
+        top:50%;
+        transform:translateY(-50%);
+        padding:9px 11px;
+        width:auto;
+    }
+
+    #adminPanelBtn i,
+    #openAuthBtn i{
+        margin:0;
+        font-size:16px;
+    }
+
+    .logout-icon{
+        margin-left:6px !important;
+    }
+
+    .search-box{
+        width:100%;
+        order:1;
+        margin:10px 0 4px;
+        height:38px;
+    }
+}
