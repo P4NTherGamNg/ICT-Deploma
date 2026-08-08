@@ -37,6 +37,35 @@
 	</nav>
 	
 	<!--Navigation bar closs-->
+
+	<!--Announcement banner open-->
+	<div class="announcement-banner hidden" id="announcementBanner">
+		<div class="announcement-banner-inner">
+			<i class="fa-solid fa-bullhorn announcement-icon" id="announcementIcon"></i>
+			<div class="announcement-text">
+				<strong id="announcementTitle"></strong>
+				<span id="announcementMessage"></span>
+				<div class="announcement-actions">
+					<a href="#" target="_blank" rel="noopener" class="announcement-link-btn hidden" id="announcementLinkBtn"></a>
+					<button type="button" class="announcement-view-all" id="viewAllAnnouncementsBtn">View all announcements</button>
+				</div>
+			</div>
+			<button type="button" id="announcementCloseBtn" class="announcement-close">&times;</button>
+		</div>
+	</div>
+	<!--Announcement banner closs-->
+
+	<!--All announcements modal open-->
+	<div class="auth-modal" id="allAnnouncementsModal">
+		<div class="auth-box announcements-list-box">
+			<button class="auth-close" id="closeAllAnnouncementsBtn">&times;</button>
+			<h2>Announcements</h2>
+			<div class="announcements-list" id="announcementsList">
+				<p class="chat-empty">Loading...</p>
+			</div>
+		</div>
+	</div>
+	<!--All announcements modal closs-->
 	
 	<section id="home" class="home">
 	
@@ -78,13 +107,25 @@
 
 				<div class="note-tab-panel" id="filesTabPanel">
 					<div class="note-details-links" id="detailsLinks"></div>
+
+					<div class="file-block-viewer hidden" id="fileBlockViewer">
+						<button type="button" class="code-back-btn" id="fileBackBtn"><i class="fa-solid fa-arrow-left"></i> Back to list</button>
+						<h4 id="fileBlockTitle"></h4>
+						<div id="filePreviewArea"></div>
+						<a href="#" target="_blank" rel="noopener" class="btn auth-submit file-open-link" id="fileOpenNewTab">
+							<i class="fa-solid fa-arrow-up-right-from-square"></i> Open in New Tab
+						</a>
+					</div>
 				</div>
 
 				<div class="note-tab-panel hidden" id="codeTabPanel">
 					<div class="note-details-links" id="codeBlocksList"></div>
 
 					<div class="code-block-viewer hidden" id="codeBlockViewer">
-						<button type="button" class="code-back-btn" id="codeBackBtn"><i class="fa-solid fa-arrow-left"></i> Back to list</button>
+						<div class="code-viewer-header">
+							<button type="button" class="code-back-btn" id="codeBackBtn"><i class="fa-solid fa-arrow-left"></i> Back to list</button>
+							<button type="button" class="copy-code-btn" id="copyCodeBtn" title="Copy"><i class="fa-solid fa-copy"></i> Copy</button>
+						</div>
 						<h4 id="codeBlockTitle"></h4>
 						<pre class="note-details-code" id="detailsCode"></pre>
 					</div>
@@ -150,9 +191,13 @@
 	<script type="module" src="auth.js"></script>
 	<script type="module" src="notes.js"></script>
 	<script type="module" src="chat.js"></script>
+	<script type="module" src="announcements.js"></script>
 
 	<!--Floating chat button + widget open-->
-	<button id="chatFab" class="chat-fab hidden"><i class="fa-solid fa-comments"></i></button>
+	<button id="chatFab" class="chat-fab hidden">
+		<i class="fa-solid fa-comments"></i>
+		<span class="chat-fab-badge hidden" id="chatFabBadge">0</span>
+	</button>
 
 	<div class="chat-widget hidden" id="chatWidget">
 		<div class="chat-widget-header">

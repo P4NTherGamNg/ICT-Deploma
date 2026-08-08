@@ -2,7 +2,6 @@ import { auth, db } from "./firebase-init.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
   doc,
-  getDoc,
   setDoc,
   collection,
   addDoc,
@@ -14,6 +13,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const chatFab = document.getElementById("chatFab");
+const chatFabBadge = document.getElementById("chatFabBadge");
 const chatWidget = document.getElementById("chatWidget");
 const chatWidgetClose = document.getElementById("chatWidgetClose");
 
@@ -34,45 +34,78 @@ let currentUserName = "";
 let currentUserRole = "";
 let unsubscribeAdminChat = null;
 let unsubscribePublicChat = null;
+let unsubscribeProfile = null;
+
+// ---------- Unread tracking ----------
+let widgetOpen = false;
+let activeTab = "public"; // "public" | "admin"
+let publicUnread = 0;
+let adminUnread = 0;
+let publicChatInitialLoad = true;
+let adminChatInitialLoad = true;
+
+function updateBadge() {
+  const total = publicUnread + adminUnread;
+  chatFabBadge.textContent = total > 9 ? "9+" : total;
+  chatFabBadge.classList.toggle("hidden", total === 0);
+}
 
 // ---------- Show/hide chat button based on login ----------
 onAuthStateChanged(auth, (user) => {
   if (user) {
     chatFab.classList.remove("hidden");
-    getUserProfile(user);
+    listenToUserProfile(user);
     listenToAdminChat(user);
     listenToPublicChat();
   } else {
     chatFab.classList.add("hidden");
     chatWidget.classList.add("hidden");
+    widgetOpen = false;
     if (unsubscribeAdminChat) unsubscribeAdminChat();
     if (unsubscribePublicChat) unsubscribePublicChat();
+    if (unsubscribeProfile) unsubscribeProfile();
     currentUserName = "";
     currentUserRole = "";
+    publicUnread = 0;
+    adminUnread = 0;
+    publicChatInitialLoad = true;
+    adminChatInitialLoad = true;
+    updateBadge();
   }
 });
 
-async function getUserProfile(user) {
-  try {
-    const snap = await getDoc(doc(db, "users", user.uid));
+function listenToUserProfile(user) {
+  unsubscribeProfile = onSnapshot(doc(db, "users", user.uid), (snap) => {
     currentUserName = snap.exists() && snap.data().name ? snap.data().name : (user.displayName || user.email);
     currentUserRole = snap.exists() ? snap.data().role || "student" : "student";
-  } catch (err) {
-    currentUserName = user.displayName || user.email;
-    currentUserRole = "student";
-  }
+  });
 }
 
 // ---------- Widget open/close ----------
 chatFab.addEventListener("click", () => {
   chatWidget.classList.toggle("hidden");
-  if (!chatWidget.classList.contains("hidden")) {
+  widgetOpen = !chatWidget.classList.contains("hidden");
+
+  if (widgetOpen) {
     scrollToBottom(publicChatMessages);
     scrollToBottom(adminChatMessages);
+    clearUnreadForActiveTab();
   }
 });
 
-chatWidgetClose.addEventListener("click", () => chatWidget.classList.add("hidden"));
+chatWidgetClose.addEventListener("click", () => {
+  chatWidget.classList.add("hidden");
+  widgetOpen = false;
+});
+
+function clearUnreadForActiveTab() {
+  if (activeTab === "public") {
+    publicUnread = 0;
+  } else {
+    adminUnread = 0;
+  }
+  updateBadge();
+}
 
 // ---------- Tab switching ----------
 publicChatTabBtn.addEventListener("click", () => {
@@ -80,6 +113,8 @@ publicChatTabBtn.addEventListener("click", () => {
   adminChatTabBtn.classList.remove("active-tab");
   publicChatPanel.classList.remove("hidden");
   adminChatPanel.classList.add("hidden");
+  activeTab = "public";
+  clearUnreadForActiveTab();
 });
 
 adminChatTabBtn.addEventListener("click", () => {
@@ -87,6 +122,8 @@ adminChatTabBtn.addEventListener("click", () => {
   publicChatTabBtn.classList.remove("active-tab");
   adminChatPanel.classList.remove("hidden");
   publicChatPanel.classList.add("hidden");
+  activeTab = "admin";
+  clearUnreadForActiveTab();
 });
 
 // ---------- Public chat (shared, real-time via Firestore) ----------
@@ -97,22 +134,35 @@ function listenToPublicChat() {
   unsubscribePublicChat = onSnapshot(q, (snapshot) => {
     if (snapshot.empty) {
       publicChatMessages.innerHTML = `<p class="chat-empty">No messages yet. Say hello!</p>`;
-      return;
+    } else {
+      publicChatMessages.innerHTML = snapshot.docs
+        .map((docSnap) => {
+          const m = docSnap.data();
+          const mine = m.uid === auth.currentUser?.uid;
+          return `
+          <div class="chat-bubble ${mine ? "chat-bubble-mine" : ""}">
+            <span class="chat-bubble-name">${escapeHtml(m.name)}</span>
+            <p class="chat-bubble-text">${escapeHtml(m.text)}</p>
+          </div>`;
+        })
+        .join("");
+
+      scrollToBottom(publicChatMessages);
     }
 
-    publicChatMessages.innerHTML = snapshot.docs
-      .map((docSnap) => {
-        const m = docSnap.data();
-        const mine = m.uid === auth.currentUser?.uid;
-        return `
-        <div class="chat-bubble ${mine ? "chat-bubble-mine" : ""}">
-          <span class="chat-bubble-name">${escapeHtml(m.name)}</span>
-          <p class="chat-bubble-text">${escapeHtml(m.text)}</p>
-        </div>`;
-      })
-      .join("");
-
-    scrollToBottom(publicChatMessages);
+    // Count unread only for genuinely new messages after the first load,
+    // from other people, while this tab isn't the one currently being viewed.
+    if (!publicChatInitialLoad) {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type !== "added") return;
+        const m = change.doc.data();
+        if (m.uid === auth.currentUser?.uid) return;
+        if (widgetOpen && activeTab === "public") return;
+        publicUnread++;
+      });
+      updateBadge();
+    }
+    publicChatInitialLoad = false;
   });
 }
 
@@ -143,22 +193,33 @@ function listenToAdminChat(user) {
   unsubscribeAdminChat = onSnapshot(q, (snapshot) => {
     if (snapshot.empty) {
       adminChatMessages.innerHTML = `<p class="chat-empty">No messages yet. Ask us anything!</p>`;
-      return;
+    } else {
+      adminChatMessages.innerHTML = snapshot.docs
+        .map((docSnap) => {
+          const m = docSnap.data();
+          const mine = m.senderUid === user.uid;
+          return `
+          <div class="chat-bubble ${mine ? "chat-bubble-mine" : ""}">
+            <span class="chat-bubble-name">${escapeHtml(m.senderName)}${m.senderRole && m.senderRole !== "student" ? " (Admin)" : ""}</span>
+            <p class="chat-bubble-text">${escapeHtml(m.text)}</p>
+          </div>`;
+        })
+        .join("");
+
+      scrollToBottom(adminChatMessages);
     }
 
-    adminChatMessages.innerHTML = snapshot.docs
-      .map((docSnap) => {
-        const m = docSnap.data();
-        const mine = m.senderUid === user.uid;
-        return `
-        <div class="chat-bubble ${mine ? "chat-bubble-mine" : ""}">
-          <span class="chat-bubble-name">${escapeHtml(m.senderName)}${m.senderRole && m.senderRole !== "student" ? " (Admin)" : ""}</span>
-          <p class="chat-bubble-text">${escapeHtml(m.text)}</p>
-        </div>`;
-      })
-      .join("");
-
-    scrollToBottom(adminChatMessages);
+    if (!adminChatInitialLoad) {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type !== "added") return;
+        const m = change.doc.data();
+        if (m.senderUid === user.uid) return; // ignore own messages
+        if (widgetOpen && activeTab === "admin") return;
+        adminUnread++;
+      });
+      updateBadge();
+    }
+    adminChatInitialLoad = false;
   });
 }
 

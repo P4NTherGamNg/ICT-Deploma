@@ -212,6 +212,8 @@ noteForm.addEventListener("submit", async (e) => {
   const subject = document.getElementById("noteSubject").value.trim();
   const description = document.getElementById("noteDesc").value.trim();
   const imageUrl = document.getElementById("noteImage").value.trim();
+  const showFilesTab = document.getElementById("showFilesTabToggle").checked;
+  const showCodeTab = document.getElementById("showCodeTabToggle").checked;
 
   const files = [];
   fileRowsContainer.querySelectorAll(".file-row").forEach((row) => {
@@ -236,7 +238,7 @@ noteForm.addEventListener("submit", async (e) => {
   noteSubmitBtn.textContent = editingNoteId ? "Updating..." : "Adding...";
 
   try {
-    const payload = { title, subject, description, files, codeBlocks, imageUrl };
+    const payload = { title, subject, description, files, codeBlocks, imageUrl, showFilesTab, showCodeTab };
 
     if (editingNoteId) {
       // Only admins should reach here (edit button only rendered for admin), but double-guard:
@@ -266,6 +268,8 @@ function enterEditMode(id, note) {
   document.getElementById("noteSubject").value = note.subject || "";
   document.getElementById("noteDesc").value = note.description || "";
   document.getElementById("noteImage").value = note.imageUrl || "";
+  document.getElementById("showFilesTabToggle").checked = note.showFilesTab !== false;
+  document.getElementById("showCodeTabToggle").checked = note.showCodeTab !== false;
 
   fileRowsContainer.innerHTML = "";
   if (note.files && note.files.length) {

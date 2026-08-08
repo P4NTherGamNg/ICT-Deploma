@@ -22,7 +22,7 @@
 
 	<div class="dashboard hidden" id="dashboard">
 		<nav class="admin-navbar">
-			<div class="nav-logo">░Dumindu.D░   Admin Panel</div>
+			<div class="nav-logo">░Dumindu.D░  Admin Panel</div>
 			<div class="admin-nav-right">
 				<span id="adminName"></span>
 				<span class="role-badge" id="adminRoleBadge"></span>
@@ -66,6 +66,11 @@
 				<input type="text" id="noteSubject" placeholder="Subject / Module (e.g. Database Systems)">
 				<textarea id="noteDesc" placeholder="Short description of what this note covers..." rows="3"></textarea>
 				<input type="url" id="noteImage" placeholder="Thumbnail Image URL (optional)">
+
+				<div class="tab-visibility-row">
+					<label class="tab-toggle"><input type="checkbox" id="showFilesTabToggle" checked> Show "Files" tab</label>
+					<label class="tab-toggle"><input type="checkbox" id="showCodeTabToggle" checked> Show "Code / Text" tab</label>
+				</div>
 
 				<label class="file-rows-label">Files</label>
 				<div id="fileRows" class="file-rows">
@@ -113,6 +118,41 @@
 		</main>
 
 		<section class="admin-main">
+			<h2>Send Announcement</h2>
+			<form id="announcementForm" class="product-form">
+				<input type="text" id="announceTitle" placeholder="Announcement title" required>
+				<textarea id="announceMessage" placeholder="Announcement message..." rows="3" required></textarea>
+				<select id="announceType" class="announce-type-select">
+					<option value="info">Info</option>
+					<option value="warning">Warning</option>
+					<option value="urgent">Urgent</option>
+				</select>
+				<input type="url" id="announceLinkUrl" placeholder="Link URL (optional, e.g. class join link)">
+				<input type="text" id="announceLinkLabel" placeholder="Button label (e.g. Join Class)">
+				<p class="auth-error" id="announceError"></p>
+				<button type="submit" class="btn auth-submit">Send to Everyone</button>
+			</form>
+
+			<h2>Sent Announcements</h2>
+			<div class="table-wrap">
+				<table class="users-table">
+					<thead>
+						<tr>
+							<th>Title</th>
+							<th>Type</th>
+							<th>Status</th>
+							<th>Sent</th>
+							<th>Action</th>
+						</tr>
+					</thead>
+					<tbody id="announcementsTableBody">
+						<tr><td colspan="5">Loading...</td></tr>
+					</tbody>
+				</table>
+			</div>
+		</section>
+
+		<section class="admin-main">
 			<div class="support-heading-row">
 				<h2>Support Messages</h2>
 				<button type="button" id="clearPublicChatBtn" class="btn danger-btn hidden"><i class="fa-solid fa-trash"></i> Clear Public Chat</button>
@@ -141,5 +181,6 @@
 
 	<script type="module" src="admin-auth.js"></script>
 	<script type="module" src="admin-chat.js"></script>
+	<script type="module" src="admin-announcements.js"></script>
 </body>
 </html>
