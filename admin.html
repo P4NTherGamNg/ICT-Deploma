@@ -26,161 +26,324 @@
 			<div class="admin-nav-right">
 				<span id="adminName"></span>
 				<span class="role-badge" id="adminRoleBadge"></span>
-				<a href="index.html" class="btn admin-store-link"><i class="fa-solid fa-store"></i> View Site</a>
+				<a href="index.html" class="btn admin-store-link"><i class="fa-solid fa-store"></i> View Store</a>
 				<button id="adminLogoutBtn" class="btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
 			</div>
 		</nav>
 
-		<main class="admin-main">
-			<h1>Dashboard</h1>
+		<!-- Mobile section dropdown -->
+		<div class="admin-mobile-nav">
+			<select id="adminSectionSelect">
+				<option value="section-overview">📊 Overview / Users</option>
+				<option value="section-notes">📝 Notes</option>
+				<option value="section-quests">🧩 Quests</option>
+				<option value="section-announcements">📣 Announcements</option>
+				<option value="section-support">💬 Support Messages</option>
+				<option value="section-permissions">🔐 Permissions</option>
+			</select>
+		</div>
 
-			<div class="stat-cards">
-				<div class="stat-card">
-					<span class="stat-value" id="totalUsers">-</span>
-					<span class="stat-label">Total Users</span>
-				</div>
-			</div>
+		<div class="admin-body">
+			<!-- Desktop sidebar -->
+			<nav class="admin-sidebar">
+				<div class="admin-sidebar-label">Panel Navigation</div>
+				<a href="#section-overview" class="sidebar-link active-sidebar-link"><i class="fa-solid fa-chart-simple"></i> Overview / Users</a>
+				<a href="#section-notes" class="sidebar-link"><i class="fa-solid fa-note-sticky"></i> Notes</a>
+				<a href="#section-quests" class="sidebar-link"><i class="fa-solid fa-puzzle-piece"></i> Quests</a>
+				<a href="#section-announcements" class="sidebar-link"><i class="fa-solid fa-bullhorn"></i> Announcements</a>
+				<a href="#section-support" class="sidebar-link"><i class="fa-solid fa-comments"></i> Support Messages</a>
+				<a href="#section-permissions" class="sidebar-link"><i class="fa-solid fa-user-shield"></i> Permissions</a>
+			</nav>
 
-			<h2>Registered Users</h2>
-			<div class="table-wrap">
-				<table class="users-table">
-					<thead>
-						<tr>
-							<th>Name</th>
-							<th>Email</th>
-							<th>Role</th>
-							<th>Support Access</th>
-							<th>Joined</th>
-							<th>Action</th>
-						</tr>
-					</thead>
-					<tbody id="usersTableBody">
-						<tr><td colspan="6">Loading...</td></tr>
-					</tbody>
-				</table>
-			</div>
+			<div class="admin-content">
 
-			<h2 id="noteFormHeading">Add a Note</h2>
-			<form id="noteForm" class="product-form">
-				<input type="text" id="noteTitle" placeholder="Note Title" required>
-				<input type="text" id="noteSubject" placeholder="Subject / Module (e.g. Database Systems)">
-				<textarea id="noteDesc" placeholder="Short description of what this note covers..." rows="3"></textarea>
-				<input type="url" id="noteImage" placeholder="Thumbnail Image URL (optional)">
+				<section class="admin-main" id="section-overview">
+					<h1>Dashboard</h1>
 
-				<div class="tab-visibility-row">
-					<label class="tab-toggle"><input type="checkbox" id="showFilesTabToggle" checked> Show "Files" tab</label>
-					<label class="tab-toggle"><input type="checkbox" id="showCodeTabToggle" checked> Show "Code / Text" tab</label>
-				</div>
+					<p class="chat-empty section-no-access hidden" id="overviewNoAccess">You don't have permission to access Overview / Users. Ask an admin to grant you access.</p>
 
-				<label class="file-rows-label">Files</label>
-				<div id="fileRows" class="file-rows">
-					<div class="file-row">
-						<input type="text" class="file-title-input" placeholder="File title (e.g. Chapter 1 Notes)">
-						<input type="url" class="file-url-input" placeholder="File URL (PDF / Drive link)">
-						<button type="button" class="remove-file-row-btn"><i class="fa-solid fa-xmark"></i></button>
+					<div id="overviewContent">
+					<div class="stat-cards">
+						<div class="stat-card">
+							<span class="stat-value" id="totalUsers">-</span>
+							<span class="stat-label">Total Users</span>
+						</div>
+						<div class="stat-card">
+							<span class="stat-value" id="totalStudents">-</span>
+							<span class="stat-label">Students</span>
+						</div>
+						<div class="stat-card">
+							<span class="stat-value" id="totalModerators">-</span>
+							<span class="stat-label">Moderators</span>
+						</div>
+						<div class="stat-card">
+							<span class="stat-value" id="totalAdmins">-</span>
+							<span class="stat-label">Admins</span>
+						</div>
 					</div>
-				</div>
-				<button type="button" id="addFileRowBtn" class="btn add-file-row-btn"><i class="fa-solid fa-plus"></i> Add Another File</button>
 
-				<label class="file-rows-label">Text / Code Blocks (optional)</label>
-				<div id="codeRows" class="file-rows">
-					<div class="code-row">
-						<input type="text" class="code-title-input" placeholder="Block title (e.g. Sample Java Code)">
-						<textarea class="code-content-input" placeholder="Paste text or code here..." rows="4"></textarea>
-						<button type="button" class="remove-code-row-btn"><i class="fa-solid fa-xmark"></i></button>
+					<h2>Registered Users</h2>
+
+					<div class="users-toolbar">
+						<div class="users-search-box">
+							<i class="fa-solid fa-magnifying-glass"></i>
+							<input type="text" id="userSearchInput" placeholder="Search by name or email...">
+						</div>
+						<div class="role-filter-tabs" id="roleFilterTabs">
+							<button type="button" class="role-filter-btn active-role-filter" data-role="all">All</button>
+							<button type="button" class="role-filter-btn" data-role="student">Students</button>
+							<button type="button" class="role-filter-btn" data-role="moderator">Moderators</button>
+							<button type="button" class="role-filter-btn" data-role="admin">Admins</button>
+						</div>
 					</div>
-				</div>
-				<button type="button" id="addCodeRowBtn" class="btn add-file-row-btn"><i class="fa-solid fa-plus"></i> Add Another Block</button>
 
-				<p class="auth-error" id="noteError"></p>
-				<div class="note-form-actions">
-					<button type="submit" class="btn auth-submit" id="noteSubmitBtn">Add Note</button>
-					<button type="button" class="btn cancel-edit-btn hidden" id="cancelEditBtn">Cancel Edit</button>
-				</div>
-			</form>
-
-			<h2>Manage Notes</h2>
-			<div class="table-wrap">
-				<table class="users-table">
-					<thead>
-						<tr>
-							<th>Image</th>
-							<th>Title</th>
-							<th>Subject</th>
-							<th>Action</th>
-						</tr>
-					</thead>
-					<tbody id="notesTableBody">
-						<tr><td colspan="4">Loading...</td></tr>
-					</tbody>
-				</table>
-			</div>
-		</main>
-
-		<section class="admin-main">
-			<h2>Send Announcement</h2>
-			<form id="announcementForm" class="product-form">
-				<input type="text" id="announceTitle" placeholder="Announcement title" required>
-				<textarea id="announceMessage" placeholder="Announcement message..." rows="3" required></textarea>
-				<select id="announceType" class="announce-type-select">
-					<option value="info">Info</option>
-					<option value="warning">Warning</option>
-					<option value="urgent">Urgent</option>
-				</select>
-				<input type="url" id="announceLinkUrl" placeholder="Link URL (optional, e.g. class join link)">
-				<input type="text" id="announceLinkLabel" placeholder="Button label (e.g. Join Class)">
-				<p class="auth-error" id="announceError"></p>
-				<button type="submit" class="btn auth-submit">Send to Everyone</button>
-			</form>
-
-			<h2>Sent Announcements</h2>
-			<div class="table-wrap">
-				<table class="users-table">
-					<thead>
-						<tr>
-							<th>Title</th>
-							<th>Type</th>
-							<th>Status</th>
-							<th>Sent</th>
-							<th>Action</th>
-						</tr>
-					</thead>
-					<tbody id="announcementsTableBody">
-						<tr><td colspan="5">Loading...</td></tr>
-					</tbody>
-				</table>
-			</div>
-		</section>
-
-		<section class="admin-main">
-			<div class="support-heading-row">
-				<h2>Support Messages</h2>
-				<button type="button" id="clearPublicChatBtn" class="btn danger-btn hidden"><i class="fa-solid fa-trash"></i> Clear Public Chat</button>
-			</div>
-			<p class="chat-empty support-no-access hidden" id="supportNoAccess">You don't have permission to access Support Messages. Ask an admin to grant you access.</p>
-			<div class="support-chat-wrap hidden" id="supportChatWrap">
-				<div class="support-threads" id="supportThreads">
-					<p class="chat-empty">Loading conversations...</p>
-				</div>
-				<div class="support-conversation">
-					<div class="support-conversation-header hidden" id="supportConvHeader">
-						<span id="supportConvName"></span>
-						<button type="button" id="clearThreadBtn" class="btn danger-btn hidden"><i class="fa-solid fa-trash"></i> Remove Conversation</button>
+					<div class="table-wrap">
+						<table class="users-table">
+							<thead>
+								<tr>
+									<th>Name</th>
+									<th>Email</th>
+									<th>Joined</th>
+									<th>Role</th>
+									<th>Support Access<span class="th-hint">(moderators only)</span></th>
+									<th>Points</th>
+									<th>Action</th>
+								</tr>
+							</thead>
+							<tbody id="usersTableBody">
+								<tr><td colspan="7">Loading...</td></tr>
+							</tbody>
+						</table>
+						<p class="chat-empty users-no-results hidden" id="usersNoResults">No users match your search/filter.</p>
 					</div>
-					<div class="chat-messages" id="supportMessages">
-						<p class="chat-empty">Select a conversation to view it.</p>
 					</div>
-					<form class="chat-input-row hidden" id="supportReplyForm">
-						<input type="text" id="supportReplyInput" placeholder="Type a reply..." autocomplete="off" required>
-						<button type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+				</section>
+
+				<section class="admin-main hidden" id="section-notes">
+					<p class="chat-empty section-no-access hidden" id="notesNoAccess">You don't have permission to access Notes. Ask an admin to grant you access.</p>
+
+					<div id="notesContent">
+					<h2 id="noteFormHeading">Add a Note</h2>
+					<form id="noteForm" class="product-form">
+						<input type="text" id="noteTitle" placeholder="Note Title" required>
+						<input type="text" id="noteSubject" placeholder="Subject / Module (e.g. Database Systems)">
+						<textarea id="noteDesc" placeholder="Short description of what this note covers..." rows="3"></textarea>
+						<input type="url" id="noteImage" placeholder="Thumbnail Image URL (optional)">
+
+						<div class="tab-visibility-row">
+							<label class="tab-toggle"><input type="checkbox" id="showFilesTabToggle" checked> Show "Files" tab</label>
+							<label class="tab-toggle"><input type="checkbox" id="showCodeTabToggle" checked> Show "Code / Text" tab</label>
+						</div>
+
+						<label class="file-rows-label">Files</label>
+						<div id="fileRows" class="file-rows">
+							<div class="file-row">
+								<input type="text" class="file-title-input" placeholder="File title (e.g. Chapter 1 Notes)">
+								<input type="url" class="file-url-input" placeholder="File URL (PDF / Drive link)">
+								<button type="button" class="remove-file-row-btn"><i class="fa-solid fa-xmark"></i></button>
+							</div>
+						</div>
+						<button type="button" id="addFileRowBtn" class="btn add-file-row-btn"><i class="fa-solid fa-plus"></i> Add Another File</button>
+
+						<label class="file-rows-label">Text / Code Blocks (optional)</label>
+						<div id="codeRows" class="file-rows">
+							<div class="code-row">
+								<input type="text" class="code-title-input" placeholder="Block title (e.g. Sample Java Code)">
+								<textarea class="code-content-input" placeholder="Paste text or code here..." rows="4"></textarea>
+								<button type="button" class="remove-code-row-btn"><i class="fa-solid fa-xmark"></i></button>
+							</div>
+						</div>
+						<button type="button" id="addCodeRowBtn" class="btn add-file-row-btn"><i class="fa-solid fa-plus"></i> Add Another Block</button>
+
+						<p class="auth-error" id="noteError"></p>
+						<div class="note-form-actions">
+							<button type="submit" class="btn auth-submit" id="noteSubmitBtn">Add Note</button>
+							<button type="button" class="btn cancel-edit-btn hidden" id="cancelEditBtn">Cancel Edit</button>
+						</div>
 					</form>
-				</div>
+
+					<h2>Manage Notes</h2>
+					<div class="table-wrap">
+						<table class="users-table">
+							<thead>
+								<tr>
+									<th>Image</th>
+									<th>Title</th>
+									<th>Subject</th>
+									<th>Action</th>
+								</tr>
+							</thead>
+							<tbody id="notesTableBody">
+								<tr><td colspan="4">Loading...</td></tr>
+							</tbody>
+						</table>
+					</div>
+					</div>
+				</section>
+
+				<section class="admin-main hidden" id="section-quests">
+					<p class="chat-empty section-no-access hidden" id="questsNoAccess">You don't have permission to access Quests. Ask an admin to grant you access.</p>
+
+					<div id="questsContent">
+					<h2 id="questFormHeading">Add a Quest</h2>
+					<form id="questForm" class="product-form">
+						<input type="text" id="questTitle" placeholder="Quest Title" required>
+						<input type="text" id="questSubject" placeholder="Subject / Module (e.g. Database Systems)">
+						<textarea id="questDesc" placeholder="Short description (shown on the card, optional)..." rows="2"></textarea>
+						<input type="url" id="questImage" placeholder="Thumbnail Image URL (optional)">
+						<input type="number" id="questPoints" placeholder="Points for a correct answer" min="1" value="10" required>
+
+						<label class="file-rows-label">Expires At (optional — quest auto-deletes after this time, earned points stay)</label>
+						<input type="datetime-local" id="questExpiry">
+
+						<textarea id="questQuestion" placeholder="Question text..." rows="3" required></textarea>
+
+						<label class="file-rows-label">Answers (mark the correct one)</label>
+						<div id="questAnswerRows" class="file-rows">
+							<div class="answer-row">
+								<input type="radio" name="questCorrectAnswer" class="answer-correct-radio" checked>
+								<input type="text" class="answer-text-input" placeholder="Answer 1">
+								<button type="button" class="remove-file-row-btn remove-answer-row-btn"><i class="fa-solid fa-xmark"></i></button>
+							</div>
+							<div class="answer-row">
+								<input type="radio" name="questCorrectAnswer" class="answer-correct-radio">
+								<input type="text" class="answer-text-input" placeholder="Answer 2">
+								<button type="button" class="remove-file-row-btn remove-answer-row-btn"><i class="fa-solid fa-xmark"></i></button>
+							</div>
+							<div class="answer-row">
+								<input type="radio" name="questCorrectAnswer" class="answer-correct-radio">
+								<input type="text" class="answer-text-input" placeholder="Answer 3">
+								<button type="button" class="remove-file-row-btn remove-answer-row-btn"><i class="fa-solid fa-xmark"></i></button>
+							</div>
+							<div class="answer-row">
+								<input type="radio" name="questCorrectAnswer" class="answer-correct-radio">
+								<input type="text" class="answer-text-input" placeholder="Answer 4">
+								<button type="button" class="remove-file-row-btn remove-answer-row-btn"><i class="fa-solid fa-xmark"></i></button>
+							</div>
+						</div>
+						<button type="button" id="addAnswerRowBtn" class="btn add-file-row-btn"><i class="fa-solid fa-plus"></i> Add Another Answer</button>
+
+						<p class="auth-error" id="questError"></p>
+						<div class="note-form-actions">
+							<button type="submit" class="btn auth-submit" id="questSubmitBtn">Add Quest</button>
+							<button type="button" class="btn cancel-edit-btn hidden" id="cancelQuestEditBtn">Cancel Edit</button>
+						</div>
+					</form>
+
+					<h2>Manage Quests</h2>
+					<div class="table-wrap">
+						<table class="users-table">
+							<thead>
+								<tr>
+									<th>Image</th>
+									<th>Title</th>
+									<th>Subject</th>
+									<th>Points</th>
+									<th>Expires</th>
+									<th>Action</th>
+								</tr>
+							</thead>
+							<tbody id="questsTableBody">
+								<tr><td colspan="6">Loading...</td></tr>
+							</tbody>
+						</table>
+					</div>
+					</div>
+				</section>
+
+				<section class="admin-main hidden" id="section-announcements">
+					<p class="chat-empty section-no-access hidden" id="announcementsNoAccess">You don't have permission to access Announcements. Ask an admin to grant you access.</p>
+
+					<div id="announcementsContent">
+					<h2>Send Announcement</h2>
+					<form id="announcementForm" class="product-form">
+						<input type="text" id="announceTitle" placeholder="Announcement title" required>
+						<textarea id="announceMessage" placeholder="Announcement message..." rows="3" required></textarea>
+						<select id="announceType" class="announce-type-select">
+							<option value="info">Info</option>
+							<option value="warning">Warning</option>
+							<option value="urgent">Urgent</option>
+						</select>
+						<input type="url" id="announceLinkUrl" placeholder="Link URL (optional, e.g. class join link)">
+						<input type="text" id="announceLinkLabel" placeholder="Button label (e.g. Join Class)">
+						<p class="auth-error" id="announceError"></p>
+						<button type="submit" class="btn auth-submit">Send to Everyone</button>
+					</form>
+
+					<h2>Sent Announcements</h2>
+					<div class="table-wrap">
+						<table class="users-table">
+							<thead>
+								<tr>
+									<th>Title</th>
+									<th>Type</th>
+									<th>Status</th>
+									<th>Sent</th>
+									<th>Action</th>
+								</tr>
+							</thead>
+							<tbody id="announcementsTableBody">
+								<tr><td colspan="5">Loading...</td></tr>
+							</tbody>
+						</table>
+					</div>
+					</div>
+				</section>
+
+				<section class="admin-main hidden" id="section-support">
+					<div class="support-heading-row">
+						<h2>Support Messages</h2>
+						<button type="button" id="clearPublicChatBtn" class="btn danger-btn hidden"><i class="fa-solid fa-trash"></i> Clear Public Chat</button>
+					</div>
+					<p class="chat-empty support-no-access hidden" id="supportNoAccess">You don't have permission to access Support Messages. Ask an admin to grant you access.</p>
+					<div class="support-chat-wrap hidden" id="supportChatWrap">
+						<div class="support-threads" id="supportThreads">
+							<p class="chat-empty">Loading conversations...</p>
+						</div>
+						<div class="support-conversation">
+							<div class="support-conversation-header hidden" id="supportConvHeader">
+								<span id="supportConvName"></span>
+								<button type="button" id="clearThreadBtn" class="btn danger-btn hidden"><i class="fa-solid fa-trash"></i> Remove Conversation</button>
+							</div>
+							<div class="chat-messages" id="supportMessages">
+								<p class="chat-empty">Select a conversation to view it.</p>
+							</div>
+							<form class="chat-input-row hidden" id="supportReplyForm">
+								<input type="text" id="supportReplyInput" placeholder="Type a reply..." autocomplete="off" required>
+								<button type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+							</form>
+						</div>
+					</div>
+				</section>
+
+				<section class="admin-main hidden" id="section-permissions">
+					<h1>Permissions</h1>
+					<p class="permissions-intro">Control which sections a moderator or admin can access. Changes take effect for that user the next time they load the admin panel.</p>
+
+					<p class="chat-empty section-no-access hidden" id="permissionsNoAccess">Only admins can manage permissions.</p>
+
+					<div id="permissionsContent">
+						<h2>Moderators</h2>
+						<div class="permission-user-list" id="moderatorPermissionsList">
+							<p class="chat-empty">Loading...</p>
+						</div>
+
+						<h2>Admins</h2>
+						<div class="permission-user-list" id="adminPermissionsList">
+							<p class="chat-empty">Loading...</p>
+						</div>
+					</div>
+				</section>
+
 			</div>
-		</section>
+		</div>
 	</div>
 
 	<script type="module" src="admin-auth.js"></script>
+	<script type="module" src="admin-quests.js"></script>
 	<script type="module" src="admin-chat.js"></script>
 	<script type="module" src="admin-announcements.js"></script>
+	<script type="module" src="admin-permissions.js"></script>
+	<script type="module" src="admin-nav.js"></script>
 </body>
 </html>

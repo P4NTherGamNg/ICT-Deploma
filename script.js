@@ -1,3 +1,25 @@
+// ---------- Study Notes / Quests tab switch ----------
+const studyNotesTabBtn = document.getElementById("studyNotesTabBtn");
+const questsTabBtn = document.getElementById("questsTabBtn");
+const studyNotesPanel = document.getElementById("studyNotesPanel");
+const questsPanel = document.getElementById("questsPanel");
+
+if (studyNotesTabBtn && questsTabBtn) {
+    studyNotesTabBtn.addEventListener("click", () => {
+        studyNotesTabBtn.classList.add("active-tab");
+        questsTabBtn.classList.remove("active-tab");
+        studyNotesPanel.classList.remove("hidden");
+        questsPanel.classList.add("hidden");
+    });
+
+    questsTabBtn.addEventListener("click", () => {
+        questsTabBtn.classList.add("active-tab");
+        studyNotesTabBtn.classList.remove("active-tab");
+        questsPanel.classList.remove("hidden");
+        studyNotesPanel.classList.add("hidden");
+    });
+}
+
 const searchInput = document.getElementById("searchInput");
 const notesSection = document.getElementById("notes");
 let hasScrolledToNotes = false;

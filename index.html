@@ -68,21 +68,45 @@
 	<!--All announcements modal closs-->
 	
 	<section id="home" class="home">
-	
+
+		<div class="leaderboard-wrap hidden" id="leaderboardWrap">
+			<button type="button" class="leaderboard-toggle-btn" id="leaderboardToggleBtn" aria-label="Toggle leaderboard">
+				<i class="fa-solid fa-chevron-right"></i>
+			</button>
+			<h3 class="leaderboard-title"><i class="fa-solid fa-ranking-star"></i> Quest Leaderboard</h3>
+			<ol class="leaderboard-list" id="leaderboardList">
+				<li class="chat-empty">Loading...</li>
+			</ol>
+		</div>
+
 		<div class="home-content">
 			<h1 class="home-title">ICT | DEPLOMA</h1>
             
 		</div>
 	</section>
 
-	<!--Notes section open-->
+	<!--Notes / Quests section open-->
 	<section id="notes" class="products">
-		<h2 class="section-title">Study Notes</h2>
-		<div class="products-grid" id="notesGrid">
-			<p class="products-empty" id="notesEmpty">Loading notes...</p>
+		<div class="content-tabs">
+			<button type="button" id="studyNotesTabBtn" class="content-tab active-tab">Study Notes</button>
+			<button type="button" id="questsTabBtn" class="content-tab">Quests</button>
+		</div>
+
+		<div class="content-panel" id="studyNotesPanel">
+			<h2 class="section-title">Study Notes</h2>
+			<div class="products-grid" id="notesGrid">
+				<p class="products-empty" id="notesEmpty">Loading notes...</p>
+			</div>
+		</div>
+
+		<div class="content-panel hidden" id="questsPanel">
+			<h2 class="section-title">Quests</h2>
+			<div class="products-grid" id="questsGrid">
+				<p class="products-empty" id="questsEmpty">Loading quests...</p>
+			</div>
 		</div>
 	</section>
-	<!--Notes section closs-->
+	<!--Notes / Quests section closs-->
 
 	<!--Note details modal open-->
 	<div class="auth-modal" id="noteDetailsModal">
@@ -190,6 +214,8 @@
 	<!--Chat widget open-->
 	<script type="module" src="auth.js"></script>
 	<script type="module" src="notes.js"></script>
+	<script type="module" src="quests.js"></script>
+	<script type="module" src="leaderboard.js"></script>
 	<script type="module" src="chat.js"></script>
 	<script type="module" src="announcements.js"></script>
 

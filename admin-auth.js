@@ -9,9 +9,11 @@ import {
   addDoc,
   deleteDoc,
   query,
+  where,
   orderBy,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { getEffectivePermissions } from "./admin-permissions-shared.js";
 
 const guardOverlay = document.getElementById("guardOverlay");
 const dashboard = document.getElementById("dashboard");
@@ -20,6 +22,16 @@ const adminRoleBadge = document.getElementById("adminRoleBadge");
 const logoutBtn = document.getElementById("adminLogoutBtn");
 const usersTableBody = document.getElementById("usersTableBody");
 const totalUsersEl = document.getElementById("totalUsers");
+const totalStudentsEl = document.getElementById("totalStudents");
+const totalModeratorsEl = document.getElementById("totalModerators");
+const totalAdminsEl = document.getElementById("totalAdmins");
+const userSearchInput = document.getElementById("userSearchInput");
+const roleFilterTabs = document.getElementById("roleFilterTabs");
+const usersNoResults = document.getElementById("usersNoResults");
+const overviewNoAccess = document.getElementById("overviewNoAccess");
+const overviewContent = document.getElementById("overviewContent");
+const notesNoAccess = document.getElementById("notesNoAccess");
+const notesContent = document.getElementById("notesContent");
 
 const noteForm = document.getElementById("noteForm");
 const noteError = document.getElementById("noteError");
@@ -36,6 +48,9 @@ const addCodeRowBtn = document.getElementById("addCodeRowBtn");
 let currentRole = null;
 let editingNoteId = null;
 let notesDataCache = {};
+let usersDataCache = []; // [{ uid, ...userData }], loaded once then filtered/rendered client-side
+let userSearchText = "";
+let activeRoleFilter = "all";
 
 // ---------- Row builders ----------
 function createFileRow(title = "", url = "") {
@@ -92,6 +107,12 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   currentRole = role;
+  const permissions = getEffectivePermissions(role, snap.exists() ? snap.data() : {});
+
+  // Let other admin scripts (nav, quests, announcements, chat) read the same
+  // permissions without each one needing its own extra Firestore read.
+  window.__adminAuth = { uid: user.uid, role, permissions };
+  document.dispatchEvent(new CustomEvent("admin:auth-ready", { detail: window.__adminAuth }));
 
   guardOverlay.classList.add("hidden");
   dashboard.classList.remove("hidden");
@@ -99,108 +120,214 @@ onAuthStateChanged(auth, async (user) => {
   adminRoleBadge.textContent = role;
   adminRoleBadge.className = `role-badge role-${role}`;
 
-  loadUsers();
-  loadProducts();
+  if (permissions.overview) {
+    overviewNoAccess.classList.add("hidden");
+    overviewContent.classList.remove("hidden");
+    loadUsers();
+  } else {
+    overviewNoAccess.classList.remove("hidden");
+    overviewContent.classList.add("hidden");
+  }
+
+  if (permissions.notes) {
+    notesNoAccess.classList.add("hidden");
+    notesContent.classList.remove("hidden");
+    loadProducts();
+  } else {
+    notesNoAccess.classList.remove("hidden");
+    notesContent.classList.add("hidden");
+  }
 });
 
 // ---------- Users ----------
 async function loadUsers() {
-  usersTableBody.innerHTML = `<tr><td colspan="6">Loading...</td></tr>`;
+  usersTableBody.innerHTML = `<tr><td colspan="7">Loading...</td></tr>`;
+  usersNoResults.classList.add("hidden");
   try {
     const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
     const snapshot = await getDocs(q);
 
-    if (snapshot.empty) {
-      usersTableBody.innerHTML = `<tr><td colspan="6">No users found.</td></tr>`;
-      totalUsersEl.textContent = "0";
-      return;
-    }
-
-    let rows = "";
-    snapshot.forEach((docSnap) => {
-      const u = docSnap.data();
-      const uid = docSnap.id;
-      const role = u.role || "student";
-      const created = u.createdAt?.toDate ? u.createdAt.toDate().toLocaleDateString() : "-";
-      const canReplySupport = !!u.canReplySupport;
-
-      if (currentRole === "admin") {
-        rows += `
-          <tr>
-            <td><input type="text" class="edit-name-input" data-uid="${uid}" value="${escapeAttr(u.name || "")}"></td>
-            <td>${escapeHtml(u.email || "-")}</td>
-            <td>
-              <select class="edit-role-select" data-uid="${uid}">
-                <option value="student" ${role === "student" ? "selected" : ""}>student</option>
-                <option value="moderator" ${role === "moderator" ? "selected" : ""}>moderator</option>
-                <option value="admin" ${role === "admin" ? "selected" : ""}>admin</option>
-              </select>
-            </td>
-            <td class="support-access-cell">
-              <input type="checkbox" class="edit-support-checkbox" data-uid="${uid}" ${canReplySupport ? "checked" : ""}>
-            </td>
-            <td>${created}</td>
-            <td><button class="save-user-btn" data-uid="${uid}"><i class="fa-solid fa-check"></i></button></td>
-          </tr>`;
-      } else {
-        // moderator view: read-only, can only promote a student to moderator
-        rows += `
-          <tr>
-            <td>${escapeHtml(u.name || "-")}</td>
-            <td>${escapeHtml(u.email || "-")}</td>
-            <td><span class="role-badge role-${role}">${role}</span></td>
-            <td>${role === "moderator" ? (canReplySupport ? "✅" : "❌") : "-"}</td>
-            <td>${created}</td>
-            <td>${role === "student" ? `<button class="promote-btn" data-uid="${uid}">Promote to Moderator</button>` : "-"}</td>
-          </tr>`;
-      }
-    });
-
-    usersTableBody.innerHTML = rows;
-    totalUsersEl.textContent = snapshot.size;
-
-    if (currentRole === "admin") {
-      usersTableBody.querySelectorAll(".save-user-btn").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const uid = btn.dataset.uid;
-          const row = btn.closest("tr");
-          const newName = row.querySelector(".edit-name-input").value.trim();
-          const newRole = row.querySelector(".edit-role-select").value;
-          const canReplySupport = row.querySelector(".edit-support-checkbox").checked;
-
-          btn.disabled = true;
-          try {
-            await updateDoc(doc(db, "users", uid), { name: newName, role: newRole, canReplySupport });
-            loadUsers();
-          } catch (err) {
-            console.error("Failed to update user:", err);
-            alert("Failed to update user. Please try again.");
-            btn.disabled = false;
-          }
-        });
-      });
-    } else {
-      usersTableBody.querySelectorAll(".promote-btn").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const uid = btn.dataset.uid;
-          btn.disabled = true;
-          btn.textContent = "Promoting...";
-          try {
-            await updateDoc(doc(db, "users", uid), { role: "moderator" });
-            loadUsers();
-          } catch (err) {
-            console.error("Failed to promote user:", err);
-            alert("Failed to promote user. Please try again.");
-            btn.disabled = false;
-            btn.textContent = "Promote to Moderator";
-          }
-        });
-      });
-    }
+    usersDataCache = snapshot.docs.map((docSnap) => ({ uid: docSnap.id, ...docSnap.data() }));
+    updateUserStats();
+    renderUsersTable();
   } catch (err) {
     console.error("Failed to load users:", err);
-    usersTableBody.innerHTML = `<tr><td colspan="6">Failed to load users.</td></tr>`;
+    usersTableBody.innerHTML = `<tr><td colspan="7">Failed to load users.</td></tr>`;
   }
+}
+
+function updateUserStats() {
+  totalUsersEl.textContent = usersDataCache.length;
+  totalStudentsEl.textContent = usersDataCache.filter((u) => (u.role || "student") === "student").length;
+  totalModeratorsEl.textContent = usersDataCache.filter((u) => u.role === "moderator").length;
+  totalAdminsEl.textContent = usersDataCache.filter((u) => u.role === "admin").length;
+}
+
+// ---------- Render the users table from the cache, applying the current search + role filter ----------
+function renderUsersTable() {
+  const search = userSearchText.trim().toLowerCase();
+
+  const filtered = usersDataCache.filter((u) => {
+    const role = u.role || "student";
+    if (activeRoleFilter !== "all" && role !== activeRoleFilter) return false;
+    if (!search) return true;
+    const name = (u.name || "").toLowerCase();
+    const email = (u.email || "").toLowerCase();
+    return name.includes(search) || email.includes(search);
+  });
+
+  if (!filtered.length) {
+    usersTableBody.innerHTML = "";
+    usersNoResults.textContent = usersDataCache.length
+      ? "No users match your search/filter."
+      : "No users found.";
+    usersNoResults.classList.remove("hidden");
+    return;
+  }
+  usersNoResults.classList.add("hidden");
+
+  let rows = "";
+  filtered.forEach((u) => {
+    const uid = u.uid;
+    const role = u.role || "student";
+    const created = u.createdAt?.toDate ? u.createdAt.toDate().toLocaleDateString() : "-";
+    const canReplySupport = !!u.canReplySupport;
+    const points = u.points || 0;
+
+    if (currentRole === "admin") {
+      rows += `
+        <tr>
+          <td><input type="text" class="edit-name-input" data-uid="${uid}" value="${escapeAttr(u.name || "")}"></td>
+          <td>${escapeHtml(u.email || "-")}</td>
+          <td>${created}</td>
+          <td>
+            <select class="edit-role-select" data-uid="${uid}">
+              <option value="student" ${role === "student" ? "selected" : ""}>student</option>
+              <option value="moderator" ${role === "moderator" ? "selected" : ""}>moderator</option>
+              <option value="admin" ${role === "admin" ? "selected" : ""}>admin</option>
+            </select>
+          </td>
+          <td class="support-access-cell">
+            <input type="checkbox" class="edit-support-checkbox" data-uid="${uid}" ${canReplySupport ? "checked" : ""} ${role !== "moderator" ? "disabled" : ""}>
+          </td>
+          <td class="points-cell">${points} pts</td>
+          <td class="user-actions-cell">
+            <button class="save-user-btn" data-uid="${uid}" title="Save changes"><i class="fa-solid fa-check"></i></button>
+            <button class="reset-points-btn" data-uid="${uid}" data-name="${escapeAttr(u.name || u.email || "this user")}" title="Reset points &amp; quest progress"><i class="fa-solid fa-rotate-left"></i></button>
+          </td>
+        </tr>`;
+    } else {
+      // moderator view: read-only, can only promote a student to moderator
+      rows += `
+        <tr>
+          <td>${escapeHtml(u.name || "-")}</td>
+          <td>${escapeHtml(u.email || "-")}</td>
+          <td>${created}</td>
+          <td><span class="role-badge role-${role}">${role}</span></td>
+          <td class="support-access-cell">${role === "moderator" ? (canReplySupport ? "✅" : "❌") : "—"}</td>
+          <td class="points-cell">${points} pts</td>
+          <td>${role === "student" ? `<button class="promote-btn" data-uid="${uid}">Promote to Moderator</button>` : "-"}</td>
+        </tr>`;
+    }
+  });
+
+  usersTableBody.innerHTML = rows;
+
+  if (currentRole === "admin") {
+    // Role select changes: Support Access checkbox is only meaningful for
+    // moderators, so keep it disabled (and unchecked-looking) for anyone else
+    // until they're switched to that role.
+    usersTableBody.querySelectorAll(".edit-role-select").forEach((select) => {
+      select.addEventListener("change", () => {
+        const row = select.closest("tr");
+        const checkbox = row.querySelector(".edit-support-checkbox");
+        const isModerator = select.value === "moderator";
+        checkbox.disabled = !isModerator;
+        if (!isModerator) checkbox.checked = false;
+      });
+    });
+
+    usersTableBody.querySelectorAll(".save-user-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const uid = btn.dataset.uid;
+        const row = btn.closest("tr");
+        const newName = row.querySelector(".edit-name-input").value.trim();
+        const newRole = row.querySelector(".edit-role-select").value;
+        const canReplySupport = newRole === "moderator" && row.querySelector(".edit-support-checkbox").checked;
+
+        btn.disabled = true;
+        try {
+          await updateDoc(doc(db, "users", uid), { name: newName, role: newRole, canReplySupport });
+          loadUsers();
+        } catch (err) {
+          console.error("Failed to update user:", err);
+          alert("Failed to update user. Please try again.");
+          btn.disabled = false;
+        }
+      });
+    });
+
+    // Reset a user's points back to 0 and clear their quest attempts so they can retake quests
+    usersTableBody.querySelectorAll(".reset-points-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const uid = btn.dataset.uid;
+        const name = btn.dataset.name;
+        if (!confirm(`Reset ${name}'s points to 0 and clear their quest progress? This can't be undone.`)) return;
+
+        btn.disabled = true;
+        try {
+          await updateDoc(doc(db, "users", uid), { points: 0 });
+
+          const attemptsQuery = query(collection(db, "questAttempts"), where("uid", "==", uid));
+          const attemptsSnap = await getDocs(attemptsQuery);
+          await Promise.all(attemptsSnap.docs.map((d) => deleteDoc(d.ref)));
+
+          loadUsers();
+        } catch (err) {
+          console.error("Failed to reset points:", err);
+          alert("Failed to reset points. Please try again.");
+          btn.disabled = false;
+        }
+      });
+    });
+  } else {
+    usersTableBody.querySelectorAll(".promote-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const uid = btn.dataset.uid;
+        btn.disabled = true;
+        btn.textContent = "Promoting...";
+        try {
+          await updateDoc(doc(db, "users", uid), { role: "moderator" });
+          loadUsers();
+        } catch (err) {
+          console.error("Failed to promote user:", err);
+          alert("Failed to promote user. Please try again.");
+          btn.disabled = false;
+          btn.textContent = "Promote to Moderator";
+        }
+      });
+    });
+  }
+}
+
+// ---------- Search + role filter controls ----------
+if (userSearchInput) {
+  userSearchInput.addEventListener("input", () => {
+    userSearchText = userSearchInput.value;
+    renderUsersTable();
+  });
+}
+
+if (roleFilterTabs) {
+  roleFilterTabs.querySelectorAll(".role-filter-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activeRoleFilter = btn.dataset.role;
+      roleFilterTabs.querySelectorAll(".role-filter-btn").forEach((b) => {
+        b.classList.toggle("active-role-filter", b === btn);
+      });
+      renderUsersTable();
+    });
+  });
 }
 
 // ---------- Add / Update note ----------

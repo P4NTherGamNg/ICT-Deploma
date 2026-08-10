@@ -12,6 +12,7 @@ import {
   orderBy,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { getEffectivePermissions } from "./admin-permissions-shared.js";
 
 const announcementForm = document.getElementById("announcementForm");
 const announceTitle = document.getElementById("announceTitle");
@@ -21,21 +22,26 @@ const announceLinkUrl = document.getElementById("announceLinkUrl");
 const announceLinkLabel = document.getElementById("announceLinkLabel");
 const announceError = document.getElementById("announceError");
 const announcementsTableBody = document.getElementById("announcementsTableBody");
-
-// Find the whole "Send Announcement" section to hide it for non-admins
-const announcementSection = announcementForm.closest(".admin-main");
+const announcementsNoAccess = document.getElementById("announcementsNoAccess");
+const announcementsContent = document.getElementById("announcementsContent");
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
   const snap = await getDoc(doc(db, "users", user.uid));
   const role = snap.exists() ? snap.data().role : null;
+  if (role !== "admin" && role !== "moderator") return;
 
-  if (role !== "admin") {
-    // Only admins can send/manage announcements
-    announcementSection.classList.add("hidden");
+  const permissions = getEffectivePermissions(role, snap.exists() ? snap.data() : {});
+
+  if (!permissions.announcements) {
+    // No access to this section — show the message instead of the form/table
+    announcementsNoAccess.classList.remove("hidden");
+    announcementsContent.classList.add("hidden");
     return;
   }
 
+  announcementsNoAccess.classList.add("hidden");
+  announcementsContent.classList.remove("hidden");
   loadAnnouncements();
 });
 

@@ -13,6 +13,7 @@ import {
   onSnapshot,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { getEffectivePermissions } from "./admin-permissions-shared.js";
 
 const supportHeadingRow = document.querySelector(".support-heading-row");
 const clearPublicChatBtn = document.getElementById("clearPublicChatBtn");
@@ -30,6 +31,8 @@ let currentAdminName = "";
 let currentAdminRole = "";
 let canAccessSupport = false;
 let isAdmin = false;
+let canClearPublicChat = false;
+let canClearAdminChat = false;
 let selectedUid = null;
 let unsubscribeMessages = null;
 
@@ -40,7 +43,11 @@ onAuthStateChanged(auth, async (user) => {
   currentAdminName = data.name || user.displayName || user.email;
   currentAdminRole = data.role || "";
   isAdmin = currentAdminRole === "admin";
-  canAccessSupport = isAdmin || (currentAdminRole === "moderator" && !!data.canReplySupport);
+
+  const permissions = getEffectivePermissions(currentAdminRole, data);
+  canAccessSupport = permissions.support;
+  canClearPublicChat = permissions.clearPublicChat;
+  canClearAdminChat = permissions.clearAdminChat;
 
   if (!canAccessSupport) {
     supportNoAccess.classList.remove("hidden");
@@ -51,7 +58,7 @@ onAuthStateChanged(auth, async (user) => {
 
   supportNoAccess.classList.add("hidden");
   supportChatWrap.classList.remove("hidden");
-  clearPublicChatBtn.classList.toggle("hidden", !isAdmin);
+  clearPublicChatBtn.classList.toggle("hidden", !canClearPublicChat);
 
   loadThreads();
 });
@@ -88,7 +95,7 @@ function openThread(uid, name) {
   supportReplyForm.classList.remove("hidden");
   supportConvHeader.classList.remove("hidden");
   supportConvName.textContent = name;
-  clearThreadBtn.classList.toggle("hidden", !isAdmin);
+  clearThreadBtn.classList.toggle("hidden", !canClearAdminChat);
 
   supportThreads.querySelectorAll(".support-thread-item").forEach((btn) => {
     btn.classList.toggle("active-thread", btn.dataset.uid === uid);
@@ -152,7 +159,7 @@ supportReplyForm.addEventListener("submit", async (e) => {
 
 // ---------- Clear a single user's support chat (admin only) ----------
 clearThreadBtn.addEventListener("click", async () => {
-  if (!isAdmin || !selectedUid) return;
+  if (!canClearAdminChat || !selectedUid) return;
   if (!confirm(`Remove the conversation with ${supportConvName.textContent}? This can't be undone.`)) return;
 
   clearThreadBtn.disabled = true;
@@ -179,7 +186,7 @@ clearThreadBtn.addEventListener("click", async () => {
 
 // ---------- Clear the shared public chat (admin only) ----------
 clearPublicChatBtn.addEventListener("click", async () => {
-  if (!isAdmin) return;
+  if (!canClearPublicChat) return;
   if (!confirm("Clear ALL public chat messages for everyone? This can't be undone.")) return;
 
   clearPublicChatBtn.disabled = true;
