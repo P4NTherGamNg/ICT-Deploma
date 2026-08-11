@@ -56,6 +56,8 @@ onSnapshot(questsQuery, (snapshot) => {
       );
     });
   }
+}, (err) => {
+  console.error("Failed to load quests:", err);
 });
 
 // ---------- Load THIS user's saved attempts, so answered quests stay locked ----------
@@ -72,14 +74,20 @@ onAuthStateChanged(auth, (user) => {
   }
 
   const attemptsQuery = query(collection(db, "questAttempts"), where("uid", "==", user.uid));
-  unsubscribeAttempts = onSnapshot(attemptsQuery, (snapshot) => {
-    attemptsCache = {};
-    snapshot.forEach((docSnap) => {
-      const a = docSnap.data();
-      attemptsCache[a.questId] = a;
-    });
-    renderGrid();
-  });
+  unsubscribeAttempts = onSnapshot(
+    attemptsQuery,
+    (snapshot) => {
+      attemptsCache = {};
+      snapshot.forEach((docSnap) => {
+        const a = docSnap.data();
+        attemptsCache[a.questId] = a;
+      });
+      renderGrid();
+    },
+    (err) => {
+      console.error("Failed to load your quest attempts:", err);
+    }
+  );
 });
 
 // ---------- Render the grid (quests + this user's completed state, if any) ----------
