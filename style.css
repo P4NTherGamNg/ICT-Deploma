@@ -1906,7 +1906,7 @@ i{
    RESPONSIVE — MOBILE (down to 320px)
    ================================================================ */
 
-@media (max-width: 1400px){
+@media (max-width: 900px){
 
     .leaderboard-wrap:not(.hidden){
         position:fixed;
@@ -1956,7 +1956,7 @@ i{
     }
 }
 
-@media (max-width: 850px){
+@media (max-width: 768px){
 
     /* ---- Navbar ---- */
     .nav-container{
@@ -2104,7 +2104,7 @@ i{
     }
 }
 
-@media (max-width: 850px){
+@media (max-width: 480px){
 
     .home-title{
         font-size:1.9rem;
@@ -2172,7 +2172,7 @@ i{
     }
 }
 
-@media (max-width: 400px){
+@media (max-width: 360px){
 
     .home-title{
         font-size:1.5rem;
@@ -2208,7 +2208,7 @@ i{
    Search box moves to its own row below. Text labels hidden.
    ================================================================ */
 
-@media (max-width: 1250px){
+@media (max-width: 768px){
 
     .nav-container{
         position:relative;
@@ -2518,7 +2518,7 @@ i{
     color:var(--danger);
 }
 
-@media (max-width: 850px){
+@media (max-width: 768px){
     .announcement-banner{
         top:110px;
     }
@@ -2770,5 +2770,32 @@ i{
 @media (max-width: 480px){
     .permission-grid{
         grid-template-columns:1fr;
+    }
+}
+
+/* ================================================================
+   MOBILE CARD GRID FIX — Study Notes / Quests cards
+   Older breakpoints (768px/480px/360px) let the grid auto-fill as
+   many small cards as physically fit per row, which is why some
+   phones showed 3 tiny cards and others showed 2. These rules pin
+   it down explicitly instead:
+     - phones (<=600px): always exactly 2 cards per row
+     - very small phones (<=380px): always exactly 1 card per row
+     - anything wider than 600px (tablets, desktop) is untouched
+   Placed at the end of the file + !important so it reliably wins
+   over the older per-breakpoint rules above without having to
+   touch/remove them.
+   ================================================================ */
+
+@media (max-width: 600px){
+    .products-grid{
+        grid-template-columns:repeat(2, 1fr) !important;
+        gap:12px !important;
+    }
+}
+
+@media (max-width: 380px){
+    .products-grid{
+        grid-template-columns:1fr !important;
     }
 }
