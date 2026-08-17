@@ -101,16 +101,24 @@ signupForm.addEventListener("submit", async (e) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(cred.user, { displayName: name });
 
-    // Save extra user info to Firestore
+    // Save extra user info to Firestore. New accounts start as "pending"
+    // until an admin approves them.
     await setDoc(doc(db, "users", cred.user.uid), {
       name,
       email,
       role: "student",
+      status: "pending",
+      authProvider: "password",
       createdAt: serverTimestamp()
     });
 
-    authModal.classList.remove("active");
+    // Don't let a freshly-created account stay signed in — they need to
+    // wait for admin approval first.
+    await signOut(auth);
+
     signupForm.reset();
+    tabLogin.click();
+    loginError.textContent = "Account created! Please wait for admin approval before you can sign in.";
   } catch (err) {
     signupError.textContent = friendlyError(err.code);
   } finally {
@@ -132,7 +140,10 @@ loginForm.addEventListener("submit", async (e) => {
   submitBtn.textContent = "Signing in...";
 
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    const allowed = await checkAccountStatus(cred.user, loginError);
+    if (!allowed) return; // pending/rejected -> already signed out, message shown
+
     authModal.classList.remove("active");
     loginForm.reset();
     await redirectIfAdmin();
@@ -143,6 +154,37 @@ loginForm.addEventListener("submit", async (e) => {
     submitBtn.textContent = "Sign In";
   }
 });
+
+// ---------- Block sign-in for accounts that aren't approved yet ----------
+// Accounts created before this feature existed have no "status" field but
+// DO have a Firestore doc — treat that as "approved" so existing users
+// aren't locked out. A missing doc entirely (e.g. deleted by an admin)
+// is treated as blocked, since the login flow always creates this doc.
+async function checkAccountStatus(user, errorEl) {
+  const snap = await getDoc(doc(db, "users", user.uid));
+
+  if (!snap.exists()) {
+    errorEl.textContent = "This account no longer exists. Please contact the admin.";
+    await signOut(auth);
+    return false;
+  }
+
+  const status = snap.data().status || "approved";
+
+  if (status === "pending") {
+    errorEl.textContent = "Your account is pending admin approval. Please check back later.";
+    await signOut(auth);
+    return false;
+  }
+
+  if (status === "rejected") {
+    errorEl.textContent = "Your account access was not approved. Please contact the admin.";
+    await signOut(auth);
+    return false;
+  }
+
+  return true;
+}
 
 // ---------- Redirect admins/moderators to dashboard ----------
 async function redirectIfAdmin() {
@@ -189,25 +231,40 @@ async function handleGoogleSignIn() {
     const userRef = doc(db, "users", user.uid);
     const existing = await getDoc(userRef);
 
-    let name;
-    if (existing.exists()) {
-      // Returning user -> keep their saved name
-      name = existing.data().name || user.displayName || "";
-    } else {
-      // First-time Google sign-in -> ask them to confirm/enter a name
-      name = await promptForName(user.displayName);
-    }
+    if (!existing.exists()) {
+      // First-time Google sign-in -> ask them to confirm/enter a name,
+      // then create the account as "pending" and sign them back out.
+      const name = await promptForName(user.displayName);
 
-    await setDoc(
-      userRef,
-      {
+      await setDoc(userRef, {
         name,
         email: user.email,
-        role: existing.exists() ? existing.data().role || "student" : "student",
+        role: "student",
+        status: "pending",
+        authProvider: "google",
         createdAt: serverTimestamp()
-      },
+      });
+
+      await signOut(auth);
+      tabLogin.click();
+      authModal.classList.add("active");
+      loginError.textContent = "Account created! Please wait for admin approval before you can sign in.";
+      return;
+    }
+
+    // Returning user -> keep their saved name/role/status, just refresh basics
+    const name = existing.data().name || user.displayName || "";
+    await setDoc(
+      userRef,
+      { name, email: user.email },
       { merge: true }
     );
+
+    const allowed = await checkAccountStatus(user, loginError);
+    if (!allowed) {
+      signupError.textContent = loginError.textContent;
+      return;
+    }
 
     authModal.classList.remove("active");
     await redirectIfAdmin();

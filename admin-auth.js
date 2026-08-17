@@ -25,9 +25,14 @@ const totalUsersEl = document.getElementById("totalUsers");
 const totalStudentsEl = document.getElementById("totalStudents");
 const totalModeratorsEl = document.getElementById("totalModerators");
 const totalAdminsEl = document.getElementById("totalAdmins");
+const totalPendingEl = document.getElementById("totalPending");
 const userSearchInput = document.getElementById("userSearchInput");
 const roleFilterTabs = document.getElementById("roleFilterTabs");
 const usersNoResults = document.getElementById("usersNoResults");
+const pendingApprovalsBlock = document.getElementById("pendingApprovalsBlock");
+const pendingUsersTableBody = document.getElementById("pendingUsersTableBody");
+const pendingUsersEmpty = document.getElementById("pendingUsersEmpty");
+const pendingCountBadge = document.getElementById("pendingCountBadge");
 const overviewNoAccess = document.getElementById("overviewNoAccess");
 const overviewContent = document.getElementById("overviewContent");
 const notesNoAccess = document.getElementById("notesNoAccess");
@@ -46,6 +51,7 @@ const codeRowsContainer = document.getElementById("codeRows");
 const addCodeRowBtn = document.getElementById("addCodeRowBtn");
 
 let currentRole = null;
+let currentPermissions = null;
 let editingNoteId = null;
 let notesDataCache = {};
 let usersDataCache = []; // [{ uid, ...userData }], loaded once then filtered/rendered client-side
@@ -108,6 +114,7 @@ onAuthStateChanged(auth, async (user) => {
 
   currentRole = role;
   const permissions = getEffectivePermissions(role, snap.exists() ? snap.data() : {});
+  currentPermissions = permissions;
 
   // Let other admin scripts (nav, quests, announcements, chat) read the same
   // permissions without each one needing its own extra Firestore read.
@@ -149,6 +156,7 @@ async function loadUsers() {
 
     usersDataCache = snapshot.docs.map((docSnap) => ({ uid: docSnap.id, ...docSnap.data() }));
     updateUserStats();
+    renderPendingUsers();
     renderUsersTable();
   } catch (err) {
     console.error("Failed to load users:", err);
@@ -161,6 +169,86 @@ function updateUserStats() {
   totalStudentsEl.textContent = usersDataCache.filter((u) => (u.role || "student") === "student").length;
   totalModeratorsEl.textContent = usersDataCache.filter((u) => u.role === "moderator").length;
   totalAdminsEl.textContent = usersDataCache.filter((u) => u.role === "admin").length;
+  if (totalPendingEl) {
+    totalPendingEl.textContent = usersDataCache.filter((u) => u.status === "pending").length;
+  }
+}
+
+// ---------- Pending approvals (new signups awaiting admin review) ----------
+// Gated by the "pendingApprovals" permission (see admin-permissions-shared.js),
+// not just role — an admin can grant this to a specific moderator from the
+// Permissions tab. Admins get it by default; moderators need it granted.
+// Note: this block lives inside the Overview / Users section, so it also
+// requires the "overview" permission just to reach this code path at all.
+function renderPendingUsers() {
+  if (!pendingApprovalsBlock || !pendingUsersTableBody) return;
+
+  const canManagePending = !!(currentPermissions && currentPermissions.pendingApprovals);
+  if (!canManagePending) {
+    pendingApprovalsBlock.classList.add("hidden");
+    return;
+  }
+  pendingApprovalsBlock.classList.remove("hidden");
+
+  const pending = usersDataCache.filter((u) => u.status === "pending");
+  if (pendingCountBadge) pendingCountBadge.textContent = pending.length;
+
+  if (!pending.length) {
+    pendingUsersTableBody.innerHTML = "";
+    if (pendingUsersEmpty) pendingUsersEmpty.classList.remove("hidden");
+    return;
+  }
+  if (pendingUsersEmpty) pendingUsersEmpty.classList.add("hidden");
+
+  let rows = "";
+  pending.forEach((u) => {
+    const created = u.createdAt?.toDate ? u.createdAt.toDate().toLocaleString() : "-";
+    const method = u.authProvider === "google" ? "Google" : "Email / Password";
+
+    rows += `
+      <tr>
+        <td>${escapeHtml(u.name || "-")}</td>
+        <td>${escapeHtml(u.email || "-")}</td>
+        <td>${method}</td>
+        <td>${created}</td>
+        <td class="pending-actions-cell">
+          <button class="approve-btn" data-uid="${u.uid}" style="background:#2e7d32;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;margin-right:6px;"><i class="fa-solid fa-check"></i> Approve</button>
+          <button class="reject-btn" data-uid="${u.uid}" style="background:#b71c1c;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;"><i class="fa-solid fa-xmark"></i> Reject</button>
+        </td>
+      </tr>`;
+  });
+  pendingUsersTableBody.innerHTML = rows;
+
+  pendingUsersTableBody.querySelectorAll(".approve-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      btn.textContent = "Approving...";
+      try {
+        await updateDoc(doc(db, "users", btn.dataset.uid), { status: "approved" });
+        loadUsers();
+      } catch (err) {
+        console.error("Failed to approve user:", err);
+        alert("Failed to approve user. Please try again.");
+        btn.disabled = false;
+      }
+    });
+  });
+
+  pendingUsersTableBody.querySelectorAll(".reject-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Reject this account? They won't be able to log in.")) return;
+      btn.disabled = true;
+      btn.textContent = "Rejecting...";
+      try {
+        await updateDoc(doc(db, "users", btn.dataset.uid), { status: "rejected" });
+        loadUsers();
+      } catch (err) {
+        console.error("Failed to reject user:", err);
+        alert("Failed to reject user. Please try again.");
+        btn.disabled = false;
+      }
+    });
+  });
 }
 
 // ---------- Render the users table from the cache, applying the current search + role filter ----------
@@ -193,12 +281,18 @@ function renderUsersTable() {
     const created = u.createdAt?.toDate ? u.createdAt.toDate().toLocaleDateString() : "-";
     const canReplySupport = !!u.canReplySupport;
     const points = u.points || 0;
+    const statusBadge =
+      u.status === "pending"
+        ? ' <span style="color:#f9a825;font-size:0.8em;">(pending)</span>'
+        : u.status === "rejected"
+        ? ' <span style="color:#e53935;font-size:0.8em;">(rejected)</span>'
+        : "";
 
     if (currentRole === "admin") {
       rows += `
         <tr>
           <td><input type="text" class="edit-name-input" data-uid="${uid}" value="${escapeAttr(u.name || "")}"></td>
-          <td>${escapeHtml(u.email || "-")}</td>
+          <td>${escapeHtml(u.email || "-")}${statusBadge}</td>
           <td>${created}</td>
           <td>
             <select class="edit-role-select" data-uid="${uid}">
@@ -214,6 +308,7 @@ function renderUsersTable() {
           <td class="user-actions-cell">
             <button class="save-user-btn" data-uid="${uid}" title="Save changes"><i class="fa-solid fa-check"></i></button>
             <button class="reset-points-btn" data-uid="${uid}" data-name="${escapeAttr(u.name || u.email || "this user")}" title="Reset points &amp; quest progress"><i class="fa-solid fa-rotate-left"></i></button>
+            ${uid !== auth.currentUser?.uid ? `<button class="delete-user-btn" data-uid="${uid}" data-name="${escapeAttr(u.name || u.email || "this user")}" title="Delete account" style="background:#b71c1c;color:#fff;border:none;"><i class="fa-solid fa-trash"></i></button>` : ""}
           </td>
         </tr>`;
     } else {
@@ -221,7 +316,7 @@ function renderUsersTable() {
       rows += `
         <tr>
           <td>${escapeHtml(u.name || "-")}</td>
-          <td>${escapeHtml(u.email || "-")}</td>
+          <td>${escapeHtml(u.email || "-")}${statusBadge}</td>
           <td>${created}</td>
           <td><span class="role-badge role-${role}">${role}</span></td>
           <td class="support-access-cell">${role === "moderator" ? (canReplySupport ? "✅" : "❌") : "—"}</td>
@@ -286,6 +381,36 @@ function renderUsersTable() {
         } catch (err) {
           console.error("Failed to reset points:", err);
           alert("Failed to reset points. Please try again.");
+          btn.disabled = false;
+        }
+      });
+    });
+
+    // Delete a user account. Admin-only. This removes their Firestore
+    // profile (name/role/status/points) and quest progress, which cuts off
+    // their access to the app — but it does NOT delete the underlying
+    // Firebase Authentication account itself (that requires the Admin SDK,
+    // e.g. via a Cloud Function, since a client app can't delete another
+    // user's auth credentials). If you also want the login credential
+    // gone for good, remove them from Firebase Console > Authentication,
+    // or set up a Cloud Function for this.
+    usersTableBody.querySelectorAll(".delete-user-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const uid = btn.dataset.uid;
+        const name = btn.dataset.name;
+        if (!confirm(`Delete ${name}'s account? This removes their profile and app access and can't be undone.\n\nNote: their Firebase login credential itself will still exist unless also removed from Firebase Console.`)) return;
+
+        btn.disabled = true;
+        try {
+          const attemptsQuery = query(collection(db, "questAttempts"), where("uid", "==", uid));
+          const attemptsSnap = await getDocs(attemptsQuery);
+          await Promise.all(attemptsSnap.docs.map((d) => deleteDoc(d.ref)));
+
+          await deleteDoc(doc(db, "users", uid));
+          loadUsers();
+        } catch (err) {
+          console.error("Failed to delete user:", err);
+          alert("Failed to delete user. Please try again.");
           btn.disabled = false;
         }
       });

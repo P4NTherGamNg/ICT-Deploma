@@ -9,6 +9,7 @@ export const ALL_PERMISSIONS = [
   { key: "quests", label: "Quests" },
   { key: "announcements", label: "Announcements" },
   { key: "support", label: "Support Messages" },
+  { key: "pendingApprovals", label: "Pending Approvals" },
   { key: "clearPublicChat", label: "Clear Public Chat" },
   { key: "clearAdminChat", label: "Clear Admin Support Chat" }
 ];

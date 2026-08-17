@@ -80,6 +80,31 @@
 							<span class="stat-value" id="totalAdmins">-</span>
 							<span class="stat-label">Admins</span>
 						</div>
+						<div class="stat-card">
+							<span class="stat-value" id="totalPending">-</span>
+							<span class="stat-label">Pending</span>
+						</div>
+					</div>
+
+					<div class="pending-approvals-block hidden" id="pendingApprovalsBlock">
+						<h2>Pending Approvals <span id="pendingCountBadge" style="background:#f9a825;color:#1E1E1E;border-radius:12px;padding:2px 10px;font-size:0.7em;vertical-align:middle;">0</span></h2>
+						<div class="table-wrap">
+							<table class="users-table">
+								<thead>
+									<tr>
+										<th>Name</th>
+										<th>Email</th>
+										<th>Signup Method</th>
+										<th>Requested</th>
+										<th>Action</th>
+									</tr>
+								</thead>
+								<tbody id="pendingUsersTableBody">
+									<tr><td colspan="5">Loading...</td></tr>
+								</tbody>
+							</table>
+							<p class="chat-empty hidden" id="pendingUsersEmpty">No accounts waiting for approval. 🎉</p>
+						</div>
 					</div>
 
 					<h2>Registered Users</h2>
