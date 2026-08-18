@@ -2799,3 +2799,22 @@ i{
         grid-template-columns:1fr !important;
     }
 }
+
+/* ================================================================
+   FOOTER
+   ================================================================ */
+
+.site-footer {
+    text-align: center;
+    padding: 22px 16px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.3px;
+}
+
+.site-footer p {
+    margin: 0;
+}

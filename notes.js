@@ -26,7 +26,7 @@ onSnapshot(q, (snapshot) => {
     const n = docSnap.data();
     notesCache[docSnap.id] = n;
 
-    const image = n.imageUrl || "https://placehold.co/400x300/1E1E1E/D4AF37?text=Notes";
+    const image = n.imageUrl || "notes.png";
 
     cards += `
       <div class="product-card note-card" data-id="${docSnap.id}">

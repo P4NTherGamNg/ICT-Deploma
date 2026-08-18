@@ -101,7 +101,7 @@ function renderGrid() {
 
   questsOrder.forEach((questId) => {
     const n = questsCache[questId];
-    const image = n.imageUrl || "https://placehold.co/400x300/1E1E1E/D4AF37?text=Quest";
+    const image = n.imageUrl || "quest.png";
     const answers = n.answers || [];
     const correctIndex = answers.findIndex((a) => a.correct);
     const attempt = attemptsCache[questId];
